@@ -14,7 +14,7 @@ async function saveFavorites(favorites: MyFavorites[]) {
     const jsonValue = JSON.stringify(favorites);
     await AsyncStorage.setItem("@myFavorites", jsonValue);
   } catch (e) {
-    console.error("Erro ao salvar favoritos:", e);
+    console.error("Error saving favorites:", e);
   }
 }
 
@@ -23,7 +23,7 @@ async function loadFavorites(): Promise<MyFavorites[]> {
     const jsonValue = await AsyncStorage.getItem("@myFavorites");
     return jsonValue != null ? JSON.parse(jsonValue) : [];
   } catch (e) {
-    console.error("Erro ao carregar favoritos:", e);
+    console.error("Error loading favorites:", e);
     return [];
   }
 }

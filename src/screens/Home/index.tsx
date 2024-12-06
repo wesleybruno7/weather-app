@@ -7,14 +7,12 @@ import 'react-native-get-random-values'
 import { Ionicons } from '@expo/vector-icons'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
 
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { NavigationProps } from '../../types'
 
 import WeatherInfo from '../../components/WeatherInfo'
 import WeatherGradient from '../../components/WeatherGradient'
 
-import { MyFavorites, useFavorites } from '../../hooks/useFavorites'
-
+import { useFavorites } from '../../hooks/useFavorites'
 
 type Props = NavigationProps<'Home'>
 
@@ -137,7 +135,7 @@ export function Home({ navigation }: Props) {
                 </View>
 
                 <View style={styles.content}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', /*backgroundColor: 'pink'*/ }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
                         <TouchableOpacity 
                             style={{ margin: 16, justifyContent: 'center', alignItems: 'center', gap: 8, flexDirection: 'row' }}
                             onPress={() => navigation.navigate('Favorites')}
