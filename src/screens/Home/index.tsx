@@ -1,24 +1,36 @@
-import 'react-native-get-random-values'
 import { useEffect, useState } from 'react'
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
 
 import { GOOGLE_API_KEY, WEATHER_API_KEY } from '@env'
 
+import 'react-native-get-random-values'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Ionicons } from '@expo/vector-icons'
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
+
+
 import WeatherInfo from '../../components/WeatherInfo'
 import WeatherGradient from '../../components/WeatherGradient'
-import { Ionicons } from '@expo/vector-icons'
 
 export function Home() {      
+    const initialDataAux = {
+        name: 'São José do Rio Preto',
+        coordinates: {
+            lat: -20.8197, 
+            lon: -49.3794,
+        }
+    }
+
     const [isDaytime, setIsDaytime] = useState<boolean>(true)
 
     const [currentTemp, setCurrentTemp] = useState(21)
     const [minTemp, setMinTemp] = useState(18)
     const [maxTemp, setMaxTemp] = useState(31)
-    
     const [weatherId, setWeatherId] = useState<number>(800)
-    const [currentCity, setCurrentCity] = useState<string>('São José do Rio Preto')
-    const [coordinates, setCoordinates] = useState<{ lat: number, lon: number } | null>({lat: -20.8197, lon: -49.3794})
+    
+    const [searchText, setSearchText] = useState<string>('')
+    const [currentCity, setCurrentCity] = useState<string>(initialDataAux.name)
+    const [coordinates, setCoordinates] = useState<{ lat: number, lon: number } | null>(initialDataAux.coordinates)
 
     type MyFavorites = {
         name: string
@@ -46,8 +58,40 @@ export function Home() {
         }
     }
 
-    const kelvinToCelsius = (kelvin: number) => kelvin - 273.15 // converter para celsius
-    // const kelvinToFahrenheit = (kelvin: number) => (kelvin - 273.15) * 9/5 + 32 // converter para fahrenheit
+    async function saveFavorites(favorites: MyFavorites[]) {
+        try {
+            const jsonValue = JSON.stringify(favorites);
+            await AsyncStorage.setItem('@myFavorites', jsonValue);
+        } catch (e) {
+            console.error("Erro ao salvar favoritos:", e);
+        }
+    }
+
+    async function loadFavorites() {
+        try {
+            const jsonValue = await AsyncStorage.getItem('@myFavorites');
+            return jsonValue != null ? JSON.parse(jsonValue) : [];
+        } catch (e) {
+            console.error("Erro ao carregar favoritos:", e);
+            return [];
+        }
+    }
+
+    useEffect(() => {
+        async function fetchFavorites() {
+            const loadedFavorites = await loadFavorites();
+            setMyFavorites(loadedFavorites);
+        }
+    
+        fetchFavorites();
+    }, []);
+    
+    useEffect(() => {
+        saveFavorites(myFavorites);
+    }, [myFavorites]);
+
+    // const kelvinToCelsius = (kelvin: number) => kelvin - 273.15 // convert to celsius
+    // const kelvinToFahrenheit = (kelvin: number) => (kelvin - 273.15) * 9/5 + 32 // convert to fahrenheit
 
     function handleFetchDataFromOpenWeatherApi(coordinates: {lat: number, lon: number}) {
         fetch(`http://api.openweathermap.org/data/2.5/weather?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${WEATHER_API_KEY}`)
@@ -59,19 +103,19 @@ export function Home() {
 
                 if (data.weather && data.weather[0]) {
                     const weatherId = data.weather[0].id
+                    // const weatherIcon = data.weather[0].icon
 
                     setWeatherId(weatherId)
                 }
 
                 if (data.main) {
-                    const temp = kelvinToCelsius(data.main.temp)
-                    const min = kelvinToCelsius(data.main.temp)                       
-                    const max = kelvinToCelsius(data.main.temp_max)
+                    const temp = data.main.temp  - 273.15
+                    const min = data.main.temp  - 273.15                       
+                    const max = data.main.temp_max  - 273.15
                     
                     setCurrentTemp(temp)
                     setMinTemp(min)
                     setMaxTemp(max)
-
                 }
 
                 if (data.sys && data.dt && data.timezone) {
@@ -108,6 +152,7 @@ export function Home() {
                                     lat: details.geometry.location.lat,
                                     lon: details.geometry.location.lng, // longitude on this attribute is "lng" and not "lon"
                                 })
+                                setSearchText('')
                             }
                         }}
                         currentLocationLabel={currentCity}
@@ -124,6 +169,10 @@ export function Home() {
                                 borderRadius: 5,
                                 paddingHorizontal: 10,
                             },
+                        }}
+                        textInputProps={{
+                            value: searchText,
+                            onChangeText: (text: string) => setSearchText(text),
                         }}
                     />
                 </View>
