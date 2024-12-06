@@ -4,31 +4,31 @@ import { View, Text, StyleSheet } from 'react-native'
 import WeatherIcon from './WeatherIcon'
 
 type WeatherProps = {
-    weather: 'clear' | 'cloudy' | 'rainy' | 'snowing' | 'storm' | 'wind' | 'drizzling' | 'overcast'
+    weatherId: number
     currentTemp: number
     minTemp: number
     maxTemp: number
     isDaytime: boolean
 }
 
-export function WeatherInfo({ weather, currentTemp, minTemp, maxTemp, isDaytime }: WeatherProps) {
+export function WeatherInfo({ weatherId, currentTemp, minTemp, maxTemp, isDaytime }: WeatherProps) {
     return (
         <View style={styles.container}>
             <View>
-                <WeatherIcon weather={weather} isDaytime={isDaytime} />
+                <WeatherIcon weatherId={weatherId} isDaytime={isDaytime} />
             </View>
 
             <View style={styles.tempContainer}>
                 <Text style={[styles.tempText, styles.tempTitle]}>
-                    {currentTemp}ºC
+                    { Math.trunc(currentTemp) }ºC
                 </Text>
 
                 <View style={styles.tempTextContainer}>
                     <Text style={styles.labelText}>
-                        Máxima.: <Text style={styles.tempText}>{maxTemp}ºC</Text>
+                        Máxima.: <Text style={styles.tempText}>{ Math.ceil(maxTemp) }ºC</Text>
                     </Text>
                     <Text style={styles.labelText}>
-                        Mínima: <Text style={styles.tempText}>{minTemp}ºC</Text>
+                        Mínima: <Text style={styles.tempText}>{ Math.floor(minTemp) }ºC</Text>
                     </Text>
                 </View>
             </View>
@@ -43,6 +43,7 @@ const styles = StyleSheet.create({
     },
     tempContainer: {
         justifyContent: 'center',
+        alignItems: 'center'
     },
     tempTitle: {
         fontSize: 80,
@@ -50,7 +51,6 @@ const styles = StyleSheet.create({
     tempTextContainer: {
         alignItems: 'center',
         padding: 10,
-        gap: 8,
     },
     labelText: {
         fontSize: 14,
