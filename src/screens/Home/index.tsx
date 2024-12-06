@@ -4,15 +4,21 @@ import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-na
 import { GOOGLE_API_KEY, WEATHER_API_KEY } from '@env'
 
 import 'react-native-get-random-values'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Ionicons } from '@expo/vector-icons'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
 
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { NavigationProps } from '../../types'
 
 import WeatherInfo from '../../components/WeatherInfo'
 import WeatherGradient from '../../components/WeatherGradient'
 
-export function Home() {      
+import { MyFavorites, useFavorites } from '../../hooks/useFavorites'
+
+
+type Props = NavigationProps<'Home'>
+
+export function Home({ navigation }: Props) {      
     const initialDataAux = {
         name: 'São José do Rio Preto',
         coordinates: {
@@ -32,86 +38,41 @@ export function Home() {
     const [currentCity, setCurrentCity] = useState<string>(initialDataAux.name)
     const [coordinates, setCoordinates] = useState<{ lat: number, lon: number } | null>(initialDataAux.coordinates)
 
-    type MyFavorites = {
-        name: string
-        lat: number,
-        lon: number,
-    }
-
-    const [myFavorites, setMyFavorites] = useState<MyFavorites[]>([])
-
-    function cityIsInFavorites(): boolean {
-        return myFavorites.some(item => item.name === currentCity)
-    }
+    const { favorites, addFavorite, removeFavorite, cityIsInFavorites } = useFavorites()
 
     function toggleFavorite() {
         const city = {
             name: currentCity,
-            lat: coordinates?.lat || 0,
-            lon: coordinates?.lon || 0,
-        };
-    
-        if (cityIsInFavorites()) {
-            setMyFavorites(prevFavorites => prevFavorites.filter(item => item.name !== currentCity));
+            coordinates: {
+                lat: coordinates?.lat || 0,
+                lon: coordinates?.lon || 0,
+            }
+        }
+
+        if (cityIsInFavorites(currentCity)) {
+            removeFavorite(currentCity)
         } else {
-            setMyFavorites(prevFavorites => [...prevFavorites, city]);
+            addFavorite(city)
         }
     }
 
-    async function saveFavorites(favorites: MyFavorites[]) {
-        try {
-            const jsonValue = JSON.stringify(favorites);
-            await AsyncStorage.setItem('@myFavorites', jsonValue);
-        } catch (e) {
-            console.error("Erro ao salvar favoritos:", e);
-        }
-    }
-
-    async function loadFavorites() {
-        try {
-            const jsonValue = await AsyncStorage.getItem('@myFavorites');
-            return jsonValue != null ? JSON.parse(jsonValue) : [];
-        } catch (e) {
-            console.error("Erro ao carregar favoritos:", e);
-            return [];
-        }
-    }
-
-    useEffect(() => {
-        async function fetchFavorites() {
-            const loadedFavorites = await loadFavorites();
-            setMyFavorites(loadedFavorites);
-        }
-    
-        fetchFavorites();
-    }, []);
-    
-    useEffect(() => {
-        saveFavorites(myFavorites);
-    }, [myFavorites]);
-
-    // const kelvinToCelsius = (kelvin: number) => kelvin - 273.15 // convert to celsius
-    // const kelvinToFahrenheit = (kelvin: number) => (kelvin - 273.15) * 9/5 + 32 // convert to fahrenheit
-
-    function handleFetchDataFromOpenWeatherApi(coordinates: {lat: number, lon: number}) {
+    function handleFetchDataFromOpenWeatherApi(coordinates: { lat: number, lon: number }) {
         fetch(`http://api.openweathermap.org/data/2.5/weather?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${WEATHER_API_KEY}`)
             .then(response => response.json())
-            .then(data => {console.log(data)
+            .then(data => {
                 if (data.name) {
                     setCurrentCity(data.name)
                 }
 
                 if (data.weather && data.weather[0]) {
                     const weatherId = data.weather[0].id
-                    // const weatherIcon = data.weather[0].icon
-
                     setWeatherId(weatherId)
                 }
 
                 if (data.main) {
-                    const temp = data.main.temp  - 273.15
-                    const min = data.main.temp  - 273.15                       
-                    const max = data.main.temp_max  - 273.15
+                    const temp = data.main.temp - 273.15
+                    const min = data.main.temp_min - 273.15
+                    const max = data.main.temp_max - 273.15
                     
                     setCurrentTemp(temp)
                     setMinTemp(min)
@@ -121,7 +82,6 @@ export function Home() {
                 if (data.sys && data.dt && data.timezone) {
                     const localDateTime = new Date((data.dt + data.timezone) * 1000)
                     const localHour = localDateTime.getUTCHours()
-
                     const localIsDaytime = localHour >= 6 && localHour < 18
                     setIsDaytime(localIsDaytime)
                 }
@@ -133,8 +93,7 @@ export function Home() {
         if (coordinates) {
             handleFetchDataFromOpenWeatherApi(coordinates)
         }
-    }, [coordinates])
-    
+    }, [coordinates])    
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
@@ -179,7 +138,10 @@ export function Home() {
 
                 <View style={styles.content}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', /*backgroundColor: 'pink'*/ }}>
-                        <TouchableOpacity onPress={()=>{}} style={{ margin: 16, justifyContent: 'center', alignItems: 'center', gap: 8, flexDirection: 'row' }}>
+                        <TouchableOpacity 
+                            style={{ margin: 16, justifyContent: 'center', alignItems: 'center', gap: 8, flexDirection: 'row' }}
+                            onPress={() => navigation.navigate('Favorites')}
+                        >
                             <Ionicons 
                                 name="settings-outline"
                                 style={{
@@ -196,10 +158,10 @@ export function Home() {
 
                         <TouchableOpacity onPress={toggleFavorite} style={{  margin: 16, justifyContent: 'center', alignItems: 'center', gap: 8, flexDirection: 'row' }}>
                             <Ionicons 
-                                name={cityIsInFavorites() ? "heart" : "heart-outline"} 
+                                name={cityIsInFavorites(currentCity) ? "heart" : "heart-outline"} 
                                 style={{
                                     fontSize: 32,
-                                    color: cityIsInFavorites() ? '#F00': '#FFF',
+                                    color: cityIsInFavorites(currentCity) ? '#F00': '#FFF',
                                 }} 
                             />
 
@@ -223,9 +185,7 @@ export function Home() {
                             maxTemp={maxTemp}
                             isDaytime={isDaytime}
                         />
-                    </View>
-
-                    
+                    </View>                    
 
                     <View style={styles.containerNextFiveDays}>
                         <Text>Test</Text>

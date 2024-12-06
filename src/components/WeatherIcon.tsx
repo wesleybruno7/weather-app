@@ -70,7 +70,8 @@ export function WeatherIcon({ weatherId, isDaytime }: WeatherIconProps) {
         case 'drizzle':
             return isDaytime ? <ShowerRainDay /> : <ShowerRainNight />
         default:
-            return null
+            return isDaytime ? <ClearDay /> : <ClearNight />
+            // return null
     }
 }
 
