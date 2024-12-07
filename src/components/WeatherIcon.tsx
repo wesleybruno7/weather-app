@@ -1,4 +1,6 @@
 import React from 'react'
+import { View, StyleSheet  } from 'react-native'
+
 import ClearDay from '../assets/01d.svg'
 import ClearNight from '../assets/01n.svg'
 import FewCloudsDay from '../assets/02d.svg'
@@ -18,9 +20,10 @@ import SnowNight from '../assets/13n.svg'
 import MistDay from '../assets/50d.svg'
 import MistNight from '../assets/50n.svg'
 
-type WeatherIconProps = {
+interface WeatherIconProps {
     weatherId: number
     isDaytime: boolean
+    size: number
 }
 
 type WeatherCondition = 
@@ -45,34 +48,42 @@ const weatherIdToIcon: { [key: number]: WeatherCondition } = {
     801: 'few clouds', 802: 'scattered clouds', 803: 'broken clouds', 804: 'broken clouds'
 }
 
-export function WeatherIcon({ weatherId, isDaytime }: WeatherIconProps) {
+export function WeatherIcon({ weatherId, isDaytime, size }: WeatherIconProps) {
     const weatherCondition = weatherIdToIcon[weatherId]
+
+    let IconComponent
 
     switch (weatherCondition) {
         case 'clear':
-            return isDaytime ? <ClearDay /> : <ClearNight />
+            IconComponent = isDaytime ? ClearDay : ClearNight
         case 'few clouds':
-            return isDaytime ? <FewCloudsDay /> : <FewCloudsNight />
+            IconComponent = isDaytime ? FewCloudsDay : FewCloudsNight
         case 'scattered clouds':
-            return isDaytime ? <ScatteredCloudsDay /> : <ScatteredCloudsNight />
+            IconComponent = isDaytime ? ScatteredCloudsDay : ScatteredCloudsNight
         case 'broken clouds':
-            return isDaytime ? <BrokenCloudsDay /> : <BrokenCloudsNight />
+            IconComponent = isDaytime ? BrokenCloudsDay : BrokenCloudsNight
         case 'shower rain':
-            return isDaytime ? <ShowerRainDay /> : <ShowerRainNight />
+            IconComponent = isDaytime ? ShowerRainDay : ShowerRainNight
         case 'rain':
-            return isDaytime ? <RainDay /> : <RainNight />
+            IconComponent = isDaytime ? RainDay : RainNight
         case 'thunderstorm':
-            return isDaytime ? <ThunderstormDay /> : <ThunderstormNight />
+            IconComponent = isDaytime ? ThunderstormDay : ThunderstormNight
         case 'snow':
-            return isDaytime ? <SnowDay /> : <SnowNight />
+            IconComponent = isDaytime ? SnowDay : SnowNight
         case 'mist':
-            return isDaytime ? <MistDay /> : <MistNight />
+            IconComponent = isDaytime ? MistDay : MistNight
         case 'drizzle':
-            return isDaytime ? <ShowerRainDay /> : <ShowerRainNight />
+            IconComponent = isDaytime ? ShowerRainDay : ShowerRainNight
         default:
-            return isDaytime ? <ClearDay /> : <ClearNight />
+            IconComponent = isDaytime ? ClearDay : ClearNight
             // return null
     }
+
+    return (
+        <View style={{ width: size, height: size }}>
+            <IconComponent width="100%" height="100%" />
+        </View>
+    )
 }
 
 export default WeatherIcon

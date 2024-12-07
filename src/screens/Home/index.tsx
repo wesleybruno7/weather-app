@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { FlatList, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
-import { GOOGLE_API_KEY, WEATHER_API_KEY } from '@env'
+import { GOOGLE_API_KEY, WEATHER_API_KEY, WEATHER_API_BASE_URL } from '@env'
 
 import 'react-native-get-random-values'
 import { Ionicons } from '@expo/vector-icons'
@@ -12,39 +12,22 @@ import { NavigationProps } from '../../types'
 import WeatherInfo from '../../components/WeatherInfo'
 import WeatherGradient from '../../components/WeatherGradient'
 
-import { useFavorites } from '../../hooks/useFavorites'
+import { MyFavorites, useFavorites } from '../../hooks/useFavorites'
 
 type Props = NavigationProps<'Home'>
 
 export function Home({ navigation }: Props) {      
-    const initialDataAux = {
-        name: 'São José do Rio Preto',
-        coordinates: {
-            lat: -20.8197, 
-            lon: -49.3794,
-        }
-    }
-
     const [isDaytime, setIsDaytime] = useState<boolean>(true)
-
-    const [currentTemp, setCurrentTemp] = useState(21)
-    const [minTemp, setMinTemp] = useState(18)
-    const [maxTemp, setMaxTemp] = useState(31)
-    const [weatherId, setWeatherId] = useState<number>(800)
     
-    const [searchText, setSearchText] = useState<string>('')
-    const [currentCity, setCurrentCity] = useState<string>(initialDataAux.name)
-    const [coordinates, setCoordinates] = useState<{ lat: number, lon: number } | null>(initialDataAux.coordinates)
+    const [currentCity, setCurrentCity] = useState<string>('')
+    const [weatherForecastData, setWeatherForecastData] = useState<MyFavorites['data']|null>(null)
 
     const { favorites, addFavorite, removeFavorite, cityIsInFavorites } = useFavorites()
 
     function toggleFavorite() {
-        const city = {
+        const city: MyFavorites = {
             name: currentCity,
-            coordinates: {
-                lat: coordinates?.lat || 0,
-                lon: coordinates?.lon || 0,
-            }
+            data: weatherForecastData,
         }
 
         if (cityIsInFavorites(currentCity)) {
@@ -54,33 +37,46 @@ export function Home({ navigation }: Props) {
         }
     }
 
-    function handleFetchDataFromOpenWeatherApi(coordinates: { lat: number, lon: number }) {
-        fetch(`http://api.openweathermap.org/data/2.5/weather?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${WEATHER_API_KEY}`)
+    interface WeatherForecastEndpoint {
+        endpoint:  'weather' | 'forecast'
+        q: string // selected city on input
+        lang?: string // to set Portuguese as language in return
+        units?: string // to define Celsius as a metric in the return
+    }
+
+    interface MainData {
+        feels_like: number,
+        grnd_level: number,
+        humidity: number,
+        pressure: number,
+        sea_level: number,
+        temp: number,
+        temp_max: number,
+        temp_min: number,
+    }
+
+    function handleGetWeatherForecast({
+        endpoint,
+        q,
+        lang = 'pt_br',
+        units = 'metric',
+    }: WeatherForecastEndpoint) {
+        const baseUrl = WEATHER_API_BASE_URL
+        const apiKey = WEATHER_API_KEY // key that guarantees your access to the api
+
+        const endpoitUrl = `${baseUrl}/${endpoint}?appid=${apiKey}&q=${q}&lang=${lang}&units=${units}` 
+
+        fetch(endpoitUrl)
             .then(response => response.json())
             .then(data => {
-                if (data.name) {
-                    setCurrentCity(data.name)
-                }
-
-                if (data.weather && data.weather[0]) {
-                    const weatherId = data.weather[0].id
-                    setWeatherId(weatherId)
-                }
-
-                if (data.main) {
-                    const temp = data.main.temp - 273.15
-                    const min = data.main.temp_min - 273.15
-                    const max = data.main.temp_max - 273.15
-                    
-                    setCurrentTemp(temp)
-                    setMinTemp(min)
-                    setMaxTemp(max)
-                }
+                setWeatherForecastData(data) // saves all returned data for future use
+                setCurrentCity(data.name)
 
                 if (data.sys && data.dt && data.timezone) {
                     const localDateTime = new Date((data.dt + data.timezone) * 1000)
                     const localHour = localDateTime.getUTCHours()
                     const localIsDaytime = localHour >= 6 && localHour < 18
+
                     setIsDaytime(localIsDaytime)
                 }
             })
@@ -88,28 +84,39 @@ export function Home({ navigation }: Props) {
     }
 
     useEffect(() => {
-        if (coordinates) {
-            handleFetchDataFromOpenWeatherApi(coordinates)
-        }
-    }, [coordinates])    
+        handleGetWeatherForecast({ endpoint: 'weather', q: 'São José do Rio Preto' })
+    }, [])
+
+    useEffect(() => {
+        console.log(favorites)
+    }, [favorites])
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <WeatherGradient weatherId={weatherId} isDaytime={isDaytime} />
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
             
-            <View style={styles.container}>
-                <View style={styles.containerSearch}>
+        >
+            <WeatherGradient weatherForecastData={weatherForecastData} isDaytime={isDaytime} />
+
+            <SafeAreaView style={styles.container}>
+
+                <View style={{
+                    position: 'absolute', 
+                    alignSelf: 'center', 
+                    zIndex: 1, 
+                    width: '100%', 
+                    flex: 1,
+                    top: 32,
+                    paddingHorizontal: 16,
+                }}>
                     <GooglePlacesAutocomplete
                         placeholder="Digite o nome de uma cidade"
                         fetchDetails={true}
                         onPress={(data, details = null) => {
                             if (details) {
-                                setCurrentCity(data.description)
-                                setCoordinates({
-                                    lat: details.geometry.location.lat,
-                                    lon: details.geometry.location.lng, // longitude on this attribute is "lng" and not "lon"
-                                })
-                                setSearchText('')
+                                handleGetWeatherForecast({ endpoint: 'weather', q: data.description })
                             }
                         }}
                         currentLocationLabel={currentCity}
@@ -118,134 +125,162 @@ export function Home({ navigation }: Props) {
                             language: 'pt',
                             types: 'geocode',
                         }}
-                        styles={{
-                            textInput: {
-                                height: 44,
-                                borderColor: '#ddd',
-                                borderWidth: 1,
-                                borderRadius: 5,
-                                paddingHorizontal: 10,
-                            },
-                        }}
-                        textInputProps={{
-                            value: searchText,
-                            onChangeText: (text: string) => setSearchText(text),
-                        }}
+                        styles={styles.searchInputText}
                     />
                 </View>
 
-                <View style={styles.content}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: 40, marginTop: 40, }}>
+                    <View style={styles.menuContainer}>
                         <TouchableOpacity 
-                            style={{ margin: 16, justifyContent: 'center', alignItems: 'center', gap: 8, flexDirection: 'row' }}
+                            style={styles.menuSettingsButton}
                             onPress={() => navigation.navigate('Favorites')}
                         >
                             <Ionicons 
                                 name="settings-outline"
-                                style={{
-                                    fontSize: 32,
-                                    color: "#FFF",
-                                }} 
+                                style={styles.menuTextIcon} 
                             />
 
                             <View>
-                                <Text style={styles.textButton}>Gerenciar</Text>
-                                <Text style={styles.textButton}>Favoritos</Text>
+                                <Text style={styles.menuTextButton}>Gerenciar</Text>
+                                <Text style={styles.menuTextButton}>Favoritos</Text>
                             </View>
                         </TouchableOpacity>
 
                         <TouchableOpacity onPress={toggleFavorite} style={{  margin: 16, justifyContent: 'center', alignItems: 'center', gap: 8, flexDirection: 'row' }}>
                             <Ionicons 
                                 name={cityIsInFavorites(currentCity) ? "heart" : "heart-outline"} 
-                                style={{
-                                    fontSize: 32,
-                                    color: cityIsInFavorites(currentCity) ? '#F00': '#FFF',
-                                }} 
+                                style={[
+                                    styles.menuTextIcon,
+                                    cityIsInFavorites(currentCity) && { color: '#F00'}
+                                ]} 
                             />
 
                             <View>
-                                <Text style={styles.textButton}>Salvar no</Text>
-                                <Text style={styles.textButton}>Favoritos</Text>
+                                <Text style={styles.menuTextButton}>Salvar no</Text>
+                                <Text style={styles.menuTextButton}>Favoritos</Text>
                             </View>
                         </TouchableOpacity>
                     </View>
 
-                    <View style={styles.containerWeatherInfo}>
-                        <View style={styles.header}>
-                            <Ionicons name="location-outline" style={styles.locationIcon} />
-                            <Text style={styles.locationText}>{currentCity}</Text>
+                    <View style={styles.weatherInfoContainer}>
+                        <View style={styles.weatherInfoHeader}>
+                            <Ionicons name="location-outline" style={styles.weatherInfoHeaderIcon} />
+
+                            <Text style={styles.weatherInfoHeaderText}>
+                                {currentCity}
+                            </Text>
                         </View>
 
                         <WeatherInfo 
-                            weatherId={weatherId}
-                            currentTemp={currentTemp}
-                            minTemp={minTemp}
-                            maxTemp={maxTemp}
+                            weatherForecastData={weatherForecastData}
                             isDaytime={isDaytime}
                         />
                     </View>                    
 
-                    <View style={styles.containerNextFiveDays}>
-                        <Text>Test</Text>
+                    <View style={{
+                        flex: 1,
+                        backgroundColor: 'purple',
+                    }}>
+                        <FlatList
+                            data={[
+                                { id: '1', title: 'Item 1' },
+                                { id: '2', title: 'Item 2' },
+                                { id: '3', title: 'Item 3' },
+                                { id: '4', title: 'Item 4' },
+                            ]}
+                            horizontal
+                            keyExtractor={(item) => item.id}
+                            renderItem={({ item }) => (
+                                <View style={{ paddingRight: 16,}}>
+                                    <View style={styles.card}>
+                                        <Text>{item.title}</Text>
+                                    </View>
+                                </View>
+                            )}
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{
+                                paddingHorizontal: 0,
+                            }}
+                            style={{ paddingHorizontal: 16 }}
+                        />
                     </View>
-                </View>
-            </View>
-        </SafeAreaView>
+                </ScrollView>                
+            </SafeAreaView>
+        </KeyboardAvoidingView>
     )
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingHorizontal: 16,
-        marginTop: 32,
-        paddingTop: 32,
+    },
+    searchInputContainer: {
+        flex: 1,
         zIndex: 1,
-        gap: 16,
+        // padding: 16,
+        // paddingTop: 32,
     },
-    containerSearch: {
-        position: 'absolute', 
-        alignSelf: 'center', 
-        zIndex: 1, 
-        width: '100%', 
-        flex: 1
+    searchInputText: {
+        height: 44,
+        borderColor: '#ddd',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingHorizontal: 10,
     },
-    content: {
-        flex: 1, 
-        marginTop: 25, 
-        marginBottom: 15, 
-        backgroundColor: 'green'
+    menuContainer: {
+        // flex: 1, 
+        // paddingTop: 48,
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        // width: '100%' 
     },
-    containerWeatherInfo: {
-        flex: 3, 
+    menuSettingsButton: { 
+        margin: 16, 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        gap: 8, 
+        flexDirection: 'row' 
+    },
+    menuTextIcon: {
+        fontSize: 32,
+        color: "#FFF",
+    },
+    menuTextButton: {
+        color: '#FFF',
+        fontSize: 10,
+    },  
+    weatherInfoContainer: {
+        flex: 1,
+        paddingTop: 16,
+        backgroundColor: 'green',
+        minHeight: 300,
         alignItems: 'center', 
         justifyContent: 'center',
     },
-    containerNextFiveDays: {
-        flex: 1, 
-        backgroundColor: 'purple'
-    },
-
-
-    header: {
+    weatherInfoHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
         gap: 8,
     },
-    locationIcon: {
+    weatherInfoHeaderIcon: {
         fontSize: 24,
         color: '#FFF'
     },
-    locationText: {
+    weatherInfoHeaderText: {
         fontSize: 20,
         fontWeight: 'bold',
         color: '#FFF'
     },
 
-    textButton: {
-        color: '#FFF',
-        fontSize: 10
-    }
+    card: {
+        backgroundColor: 'lightgreen',
+        width: 150,
+        height: 150,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        // marginRight: 16,
+    },
 })

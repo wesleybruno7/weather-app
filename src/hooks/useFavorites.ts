@@ -3,16 +3,56 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface MyFavorites {
   name: string;
-  coordinates: {
-    lat: number;
-    lon: number;
-  };
+  data: {
+    base: string;
+    clouds: {
+      all: number;
+    };
+    cod: number;
+    coord: {
+      lat: number;
+      lon: number;
+    };
+    dt: number;
+    id: number;
+    main: {
+      feels_like: number;
+      grnd_level: number;
+      humidity: number;
+      pressure: number;
+      sea_level: number;
+      temp: number;
+      temp_max: number;
+      temp_min: number;
+    };
+    name: string;
+    sys: {
+      country: string;
+      sunrise: number;
+      sunset: number;
+    };
+    timezone: number;
+    visibility: number;
+    weather: {
+      description: string;
+      icon: string;
+      id: number;
+      main: string;
+    }[];
+    wind: {
+      deg: number;
+      gust: number;
+      speed: number;
+    };
+  } | null;
 }
+
+export const storageName = "@myFavorites";
 
 async function saveFavorites(favorites: MyFavorites[]) {
   try {
     const jsonValue = JSON.stringify(favorites);
-    await AsyncStorage.setItem("@myFavorites", jsonValue);
+    await AsyncStorage.setItem(storageName, jsonValue);
   } catch (e) {
     console.error("Error saving favorites:", e);
   }
@@ -20,7 +60,7 @@ async function saveFavorites(favorites: MyFavorites[]) {
 
 async function loadFavorites(): Promise<MyFavorites[]> {
   try {
-    const jsonValue = await AsyncStorage.getItem("@myFavorites");
+    const jsonValue = await AsyncStorage.getItem(storageName);
     return jsonValue != null ? JSON.parse(jsonValue) : [];
   } catch (e) {
     console.error("Error loading favorites:", e);
@@ -60,5 +100,10 @@ export function useFavorites() {
     return favorites.some((item) => item.name === name);
   };
 
-  return { favorites, addFavorite, removeFavorite, cityIsInFavorites };
+  return {
+    favorites,
+    addFavorite,
+    removeFavorite,
+    cityIsInFavorites,
+  };
 }

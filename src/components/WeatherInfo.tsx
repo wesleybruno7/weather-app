@@ -1,20 +1,33 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import WeatherIcon from './WeatherIcon'
 
-type WeatherProps = {
-    weatherId: number
-    currentTemp: number
-    minTemp: number
-    maxTemp: number
+import { MyFavorites } from '../hooks/useFavorites'
+
+interface WeatherProps {
+    weatherForecastData: MyFavorites['data']
     isDaytime: boolean
 }
 
-export function WeatherInfo({ weatherId, currentTemp, minTemp, maxTemp, isDaytime }: WeatherProps) {
+export function WeatherInfo({ weatherForecastData, isDaytime }: WeatherProps) {
+
+    const [weatherId, setWeatherId] = useState<number>(800)
+
+    const [currentTemp, setCurrentTemp] = useState<number>(0)
+    const [minTemp, setMinTemp] = useState<number>(0)
+    const [maxTemp, setMaxTemp] = useState<number>(0)
+
+    useEffect(() => {
+        setWeatherId(weatherForecastData?.id || 800)
+        setCurrentTemp(weatherForecastData?.main?.temp || 0)
+        setMinTemp(weatherForecastData?.main?.temp_min || 0)
+        setMaxTemp(weatherForecastData?.main?.temp_max || 0)
+    }, [weatherForecastData])
+
     return (
         <View style={styles.container}>
             <View>
-                <WeatherIcon weatherId={weatherId} isDaytime={isDaytime} />
+                <WeatherIcon weatherId={weatherId} isDaytime={isDaytime} size={120} />
             </View>
 
             <View style={styles.tempContainer}>
@@ -39,13 +52,14 @@ const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
         justifyContent: 'center',
+        height: 350,
     },
     tempContainer: {
         justifyContent: 'center',
         alignItems: 'center'
     },
     tempTitle: {
-        fontSize: 80,
+        fontSize: 64,
     },
     tempTextContainer: {
         alignItems: 'center',

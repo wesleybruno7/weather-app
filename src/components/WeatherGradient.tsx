@@ -1,21 +1,23 @@
 import React, { useEffect, useState } from 'react'
 import { StyleSheet } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
+import { MyFavorites } from '../hooks/useFavorites'
 
-interface WeatherGradientType {
-    weatherId: number
+interface WeatherGradient {
+    weatherForecastData: MyFavorites['data']
     isDaytime: boolean
 }
 
-export function WeatherGradient({ weatherId, isDaytime }: WeatherGradientType) {
+export function WeatherGradient({ weatherForecastData, isDaytime }: WeatherGradient) {
+    const [weatherId, setWeatherId] = useState<number>(800)
     const [currentGradientColor, setCurrentGradientColor] = useState<[string, string]>(['#444DF4', '##B0C4DE'])
 
-    const weatherIdToColors = (weatherId: number, isDaytime: boolean): [string, string] => {
+    const weatherIdToColors = (id: number, isDaytime: boolean): [string, string] => {
         const baseColor = '#444DF4'
         
         let color
     
-        switch (weatherId) {
+        switch (id) {
             case 200: case 201: case 202: case 210: case 211: case 212: case 221: case 230: case 231: case 232: // Thunderstorm
                 color = isDaytime ? '#2F4F4F' : '#1C1C1C'
                 break
@@ -58,7 +60,10 @@ export function WeatherGradient({ weatherId, isDaytime }: WeatherGradientType) {
     }
 
     useEffect(() => {
-        const newGradientColor = weatherIdToColors(weatherId, isDaytime)
+        const id = weatherForecastData?.id || 800
+        setWeatherId(id)
+
+        const newGradientColor = weatherIdToColors(id, isDaytime)
         setCurrentGradientColor(newGradientColor)
     }, [weatherId, isDaytime])
 

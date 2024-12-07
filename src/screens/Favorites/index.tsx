@@ -14,7 +14,7 @@ export function Favorites() {
         renderItem={({ item }) => (
           <FavoriteCard 
             title={item.name} 
-            description={`Lat: ${item.coordinates.lat}, Lon: ${item.coordinates.lon}`} 
+            description={`Lat: ${item.data?.coord.lat}, Lon: ${item.data?.coord.lon}`} 
           />
         )}
       />
