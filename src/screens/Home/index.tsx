@@ -13,6 +13,7 @@ import WeatherInfo from '../../components/WeatherInfo'
 import WeatherGradient from '../../components/WeatherGradient'
 
 import { MyFavorites, useFavorites } from '../../hooks/useFavorites'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 type Props = NavigationProps<'Home'>
 
@@ -92,44 +93,46 @@ export function Home({ navigation }: Props) {
     }, [favorites])
 
     return (
-        <KeyboardAvoidingView
+        <KeyboardAwareScrollView
             style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
-            
-        >
+        >        
             <WeatherGradient weatherForecastData={weatherForecastData} isDaytime={isDaytime} />
 
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={styles.container}>         
 
-                <View style={{
-                    position: 'absolute', 
-                    alignSelf: 'center', 
-                    zIndex: 1, 
-                    width: '100%', 
-                    flex: 1,
-                    top: 32,
-                    paddingHorizontal: 16,
-                }}>
-                    <GooglePlacesAutocomplete
-                        placeholder="Digite o nome de uma cidade"
-                        fetchDetails={true}
-                        onPress={(data, details = null) => {
-                            if (details) {
-                                handleGetWeatherForecast({ endpoint: 'weather', q: data.description })
-                            }
-                        }}
-                        currentLocationLabel={currentCity}
-                        query={{
-                            key: GOOGLE_API_KEY,
-                            language: 'pt',
-                            types: 'geocode',
-                        }}
-                        styles={styles.searchInputText}
-                    />
-                </View>
+                <View
+                    style={{ flexGrow: 1, paddingTop: 80, }}
+                >
+                    <View style={{
+                        position: 'absolute', 
+                        alignSelf: 'center', 
+                        zIndex: 1, 
+                        width: '100%', 
+                        flex: 1,
+                        marginTop: 32,
+                        paddingHorizontal: 16,
+                    }}>
+                        <GooglePlacesAutocomplete
+                            placeholder="Digite o nome de uma cidade"
+                            fetchDetails={true}
+                            onPress={(data, details = null) => {
+                                if (details) {
+                                    handleGetWeatherForecast({ endpoint: 'weather', q: data.description })
+                                }
+                            }}
+                            currentLocationLabel={currentCity}
+                            query={{
+                                key: GOOGLE_API_KEY,
+                                language: 'pt',
+                                types: 'geocode',
+                            }}
+                            styles={styles.searchInputText}
+                            debounce={100}
+                            enablePoweredByContainer={false}
+                            listViewDisplayed="auto"
+                        />
+                    </View>
 
-                <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: 40, marginTop: 40, }}>
                     <View style={styles.menuContainer}>
                         <TouchableOpacity 
                             style={styles.menuSettingsButton}
@@ -163,24 +166,23 @@ export function Home({ navigation }: Props) {
                     </View>
 
                     <View style={styles.weatherInfoContainer}>
-                        <View style={styles.weatherInfoHeader}>
-                            <Ionicons name="location-outline" style={styles.weatherInfoHeaderIcon} />
+                        <View style={styles.weatherInfoContent}>
+                            <View style={styles.weatherInfoHeader}>
+                                <Ionicons name="location-outline" style={styles.weatherInfoHeaderIcon} />
 
-                            <Text style={styles.weatherInfoHeaderText}>
-                                {currentCity}
-                            </Text>
-                        </View>
+                                <Text style={styles.weatherInfoHeaderText}>
+                                    {currentCity}
+                                </Text>
+                            </View>
 
-                        <WeatherInfo 
-                            weatherForecastData={weatherForecastData}
-                            isDaytime={isDaytime}
-                        />
-                    </View>                    
+                            <WeatherInfo 
+                                weatherForecastData={weatherForecastData}
+                                isDaytime={isDaytime}
+                            />
+                        </View>                    
+                    </View>
 
-                    <View style={{
-                        flex: 1,
-                        backgroundColor: 'purple',
-                    }}>
+                    <View style={styles.nextFiveDaysContainer}>
                         <FlatList
                             data={[
                                 { id: '1', title: 'Item 1' },
@@ -204,9 +206,9 @@ export function Home({ navigation }: Props) {
                             style={{ paddingHorizontal: 16 }}
                         />
                     </View>
-                </ScrollView>                
+                </View>  
             </SafeAreaView>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
     )
 }
 
@@ -250,19 +252,27 @@ const styles = StyleSheet.create({
         fontSize: 10,
     },  
     weatherInfoContainer: {
+        flex: 1, 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        backgroundColor: 'orange', 
+        // minHeight: 200
+    },
+    weatherInfoContent: {
         flex: 1,
         paddingTop: 16,
         backgroundColor: 'green',
-        minHeight: 300,
         alignItems: 'center', 
         justifyContent: 'center',
+        overflow: 'hidden',
     },
     weatherInfoHeader: {
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
+        // alignItems: 'center',
+        // justifyContent: 'center',
         width: '100%',
         gap: 8,
+        paddingHorizontal: 16
     },
     weatherInfoHeaderIcon: {
         fontSize: 24,
@@ -271,7 +281,8 @@ const styles = StyleSheet.create({
     weatherInfoHeaderText: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#FFF'
+        color: '#FFF',
+        paddingRight: 8,
     },
 
     card: {
@@ -282,5 +293,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         // marginRight: 16,
+    },
+    nextFiveDaysContainer: {
+        // flex: 1,
+        backgroundColor: 'purple',
+        paddingVertical: 16,
     },
 })
