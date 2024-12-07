@@ -1,47 +1,46 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, StyleSheet } from 'react-native'
-import WeatherIcon from './WeatherIcon'
-
-import { MyFavorites } from '../hooks/useFavorites'
+import { View, Text, StyleSheet, Image } from 'react-native'
 
 interface WeatherProps {
-    weatherForecastData: MyFavorites['data']
+    weatherForecastData: any
     isDaytime: boolean
 }
 
 export function WeatherInfo({ weatherForecastData, isDaytime }: WeatherProps) {
+    const { main } = weatherForecastData
+    const { temp, temp_min, temp_max } = main
 
-    const [weatherId, setWeatherId] = useState<number>(800)
+    const { weather } = weatherForecastData
+    const { icon, description } = weather[0]
 
-    const [currentTemp, setCurrentTemp] = useState<number>(0)
-    const [minTemp, setMinTemp] = useState<number>(0)
-    const [maxTemp, setMaxTemp] = useState<number>(0)
-
-    useEffect(() => {
-        setWeatherId(weatherForecastData?.id || 800)
-        setCurrentTemp(weatherForecastData?.main?.temp || 0)
-        setMinTemp(weatherForecastData?.main?.temp_min || 0)
-        setMaxTemp(weatherForecastData?.main?.temp_max || 0)
-    }, [weatherForecastData])
+    function capitalizeWords(description: string) {
+        return description.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
 
     return (
         <View style={styles.container}>
-            <View>
-                <WeatherIcon weatherId={weatherId} isDaytime={isDaytime} size={120} />
+            <Image
+                style={styles.icon}
+                source={{ uri: `https://openweathermap.org/img/wn/${icon}@4x.png` }}
+            />
+
+            <View style={styles.tempTextContainer}>
+                <Text style={styles.tempText}>{capitalizeWords(description)}</Text>
             </View>
 
             <View style={styles.tempContainer}>
                 <Text style={[styles.tempText, styles.tempTitle]}>
-                    { Math.trunc(currentTemp) }ºC
+                    { Math.trunc(temp) }ºC
                 </Text>
 
                 <View style={styles.tempTextContainer}>
                     <Text style={styles.labelText}>
-                        Máxima.: <Text style={styles.tempText}>{ Math.ceil(maxTemp) }ºC</Text>
+                        Máxima.: <Text style={styles.tempText}>{ Math.ceil(temp_max) }ºC</Text>
                     </Text>
                     <Text style={styles.labelText}>
-                        Mínima: <Text style={styles.tempText}>{ Math.floor(minTemp) }ºC</Text>
+                        Mínima: <Text style={styles.tempText}>{ Math.floor(temp_min) }ºC</Text>
                     </Text>
+
                 </View>
             </View>
         </View>
@@ -52,7 +51,7 @@ const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
         justifyContent: 'center',
-        height: 350,
+        padding: 32,
     },
     tempContainer: {
         justifyContent: 'center',
@@ -73,6 +72,11 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: '#FFFFFF',
+    },
+
+    icon: {
+        width: 120,
+        height: 120,
     },
 })
 
