@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { FlatList, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { GOOGLE_API_KEY, WEATHER_API_KEY, WEATHER_API_BASE_URL } from '@env'
@@ -15,16 +15,16 @@ import { weatherDataCity, WeatherDataList } from '../../types/openWeatherMap'
 import { MyFavorites, useFavorites } from '../../hooks/useFavorites'
 import { WeatherCard } from '../../components/WeatherCard'
 import WeatherInfo from '../../components/WeatherInfo'
+import { useFocusEffect } from '@react-navigation/native'
 
 
 type Props = NavigationProps<'Home'>
 
-export function Home({ navigation }: Props) {         
-    
-    const { favorites, addFavorite, removeFavorite, cityIsInFavorites } = useFavorites()
+export function Home({ navigation, route }: Props) {     
+        
+    const { favorites, addFavorite, removeFavorite, cityIsInFavorites, reloadFavorites } = useFavorites()
 
     const [weatherData, setWeatherData] = useState<MyFavorites | null>(null)
-    const [isFavorite, setIsFavorite] = useState<boolean>(false)
 
     function toggleFavorite() {
         if (weatherData) {
@@ -71,14 +71,20 @@ export function Home({ navigation }: Props) {
             .catch(error => console.error("Unable to obtain the weather via request:", error))
     }
 
+    const city = route?.params?.city || 'São José do Rio Preto'
+
     useEffect(() => {
-        const initialLocation = 'São José do Rio Preto'
-        handleGetWeatherForecast(initialLocation)
+        handleGetWeatherForecast(city)
     }, [])
 
-    // useEffect(() => {
-    //     console.log(favorites)
-    // }, [favorites])
+    useFocusEffect(
+        useCallback(() => {
+            // Update favorites when screen gains focus
+            reloadFavorites()
+
+            handleGetWeatherForecast(city)
+        }, [])
+    )
 
     return (
         <SafeAreaView style={styles.container}>     
@@ -100,7 +106,6 @@ export function Home({ navigation }: Props) {
                     width: '100%', 
                     flex: 1,
                     marginTop: Platform.OS === 'ios' ? 20 : 40,
-                    // marginTop: 72,
                     paddingHorizontal: 16,
                 }}>
                     <GooglePlacesAutocomplete

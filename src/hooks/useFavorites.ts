@@ -49,6 +49,11 @@ export function useFavorites() {
     fetchFavorites();
   }, []);
 
+  const reloadFavorites = async () => {
+    const loadedFavorites = await loadFavorites();
+    setFavorites(loadedFavorites);
+  };
+
   const addFavorite = (favorite: MyFavorites) => {
     setFavorites((prevFavorites) => {
       const newFavorites = [...prevFavorites, favorite];
@@ -76,5 +81,6 @@ export function useFavorites() {
     addFavorite,
     removeFavorite,
     cityIsInFavorites,
+    reloadFavorites,
   };
 }
