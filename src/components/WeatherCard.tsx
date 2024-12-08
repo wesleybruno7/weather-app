@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF66',
         padding: 16,
         borderRadius: 10,
-        width: 190,
+        width: 170,
         marginRight: 16,
     },
     textLarge: {
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
         fontStyle: 'italic',
     },
     icon: {
-        width: 50,
-        height: 50,
+        width: 40,
+        height: 40,
     },
 })

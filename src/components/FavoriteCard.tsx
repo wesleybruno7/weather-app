@@ -36,7 +36,7 @@ export function FavoriteCard({ city, onDelete }: Props) {
       <Swipeable
         renderRightActions={() => (
           <TouchableOpacity
-            style={styles.deleteButton}
+            style={[styles.deleteButton, styles.shadow]}
             onPress={onDelete}
           >
             <Ionicons 
@@ -53,8 +53,9 @@ export function FavoriteCard({ city, onDelete }: Props) {
       >
         <TouchableOpacity
           onPress={() => navigation.navigate('Home', { city: city.name })}
+          activeOpacity={1}
         >
-          <Animated.View style={[styles.card, animatedStyle]}>
+          <Animated.View style={[styles.card, styles.shadow, animatedStyle]}>
             <Text style={styles.cardTitle}>{city.name}</Text>
             <Text style={styles.cardText}>
               Latitude: 
@@ -77,18 +78,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   deleteButton: {
-    backgroundColor: 'red',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 16,
     marginVertical: 8,
     borderTopRightRadius: 8,
     borderBottomRightRadius: 8,
-    borderColor: '#cccccc66',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    borderColor: '#CCC',
+    backgroundColor: '#F00',
+    
   },
   deleteButtonIcon: {
     color: '#FFF',
@@ -101,11 +99,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 8,
     borderBottomLeftRadius: 8,
     borderWidth: 1,
-    borderColor: '#cccccc66',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    borderColor: '#CCC',
+    
     elevation: 5,
   },
   cardTitle: {
@@ -114,4 +109,10 @@ const styles = StyleSheet.create({
   cardText: {
     fontSize: 12,
   },
+  shadow: {
+    shadowColor: '#CCC',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  }
 });

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { View, FlatList, StyleSheet, SafeAreaView, TextInput, TouchableOpacity } from 'react-native'
+import { View, FlatList, StyleSheet, SafeAreaView, TextInput, TouchableOpacity, Text } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { FavoriteCard } from '../../components/FavoriteCard'
 import { useFavorites } from '../../hooks/useFavorites'
@@ -49,16 +49,22 @@ export function Favorites({ navigation }: Props) {
         </View>
 
         <View style={styles.listContainer}>
-          <FlatList
-            data={filteredFavorites}
-            keyExtractor={(item) => item.city.name}
-            renderItem={({ item }) => (
-              <FavoriteCard
-                city={item.city}
-                onDelete={() => removeFavorite(item.city.name)}
+          {
+            filteredFavorites.length === 0 ? (
+              <Text style={styles.emptyMessage}>Nenhum registro para exibir</Text>
+            ) : (
+              <FlatList
+                data={filteredFavorites}
+                keyExtractor={(item) => item.city.name}
+                renderItem={({ item }) => (
+                  <FavoriteCard
+                    city={item.city}
+                    onDelete={() => removeFavorite(item.city.name)}
+                  />
+                )}
               />
-            )}
-          />
+            )
+          }
         </View>
       </SafeAreaView>
     </>    
@@ -91,5 +97,12 @@ const styles = StyleSheet.create({
   listContainer: {
     flex: 1,
     paddingVertical: 16,
+  },
+  emptyMessage: {
+    textAlign: 'center',
+    marginTop: 32,
+    fontSize: 18,
+    color: '#888',
+    alignSelf: 'center',
   },
 })
