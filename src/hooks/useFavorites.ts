@@ -1,53 +1,22 @@
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { weatherDataCity, WeatherDataList } from "../types/openWeatherMap";
 
 export interface MyFavorites {
-  name: string;
-  data: {
-    base: string;
-    clouds: {
-      all: number;
-    };
-    cod: number;
-    coord: {
-      lat: number;
-      lon: number;
-    };
-    dt: number;
-    id: number;
-    main: {
-      feels_like: number;
-      grnd_level: number;
-      humidity: number;
-      pressure: number;
-      sea_level: number;
-      temp: number;
-      temp_max: number;
-      temp_min: number;
-    };
-    name: string;
-    sys: {
-      country: string;
-      sunrise: number;
-      sunset: number;
-    };
-    timezone: number;
-    visibility: number;
-    weather: {
-      description: string;
-      icon: string;
-      id: number;
-      main: string;
-    }[];
-    wind: {
-      deg: number;
-      gust: number;
-      speed: number;
-    };
-  } | null;
+  list: WeatherDataList[];
+  city: weatherDataCity;
 }
 
 export const storageName = "@myFavorites";
+
+async function clearFavorites() {
+  try {
+    await AsyncStorage.removeItem(storageName);
+    console.log("Favorites cleared successfully");
+  } catch (e) {
+    console.error("Error clearing favorites:", e);
+  }
+}
 
 async function saveFavorites(favorites: MyFavorites[]) {
   try {
@@ -90,14 +59,16 @@ export function useFavorites() {
 
   const removeFavorite = (name: string) => {
     setFavorites((prevFavorites) => {
-      const newFavorites = prevFavorites.filter((item) => item.name !== name);
+      const newFavorites = prevFavorites.filter(
+        (item) => item.city.name !== name
+      );
       saveFavorites(newFavorites);
       return newFavorites;
     });
   };
 
-  const cityIsInFavorites = (name: string): boolean => {
-    return favorites.some((item) => item.name === name);
+  const cityIsInFavorites = (name: string | undefined): boolean => {
+    return favorites.some((item) => item?.city?.name === name) || false;
   };
 
   return {

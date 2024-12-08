@@ -10,11 +10,11 @@ export function Favorites() {
     <View style={styles.container}>
       <FlatList
         data={favorites}
-        keyExtractor={(item) => item.name}
+        keyExtractor={(item) => item.city.name}
         renderItem={({ item }) => (
           <FavoriteCard 
-            title={item.name} 
-            description={`Lat: ${item.data?.coord.lat}, Lon: ${item.data?.coord.lon}`} 
+            title={item.city.name} 
+            description={`Lat: ${item.city.coord.lat}, Lon: ${item.city.coord.lon}`} 
           />
         )}
       />

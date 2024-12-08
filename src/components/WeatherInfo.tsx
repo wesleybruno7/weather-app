@@ -1,47 +1,90 @@
+import { Ionicons } from '@expo/vector-icons'
 import React from 'react'
 import { View, Text, StyleSheet, Image } from 'react-native'
+import { weatherDataCity, WeatherDataList } from '../types/openWeatherMap'
 
 interface Props {
-    data: any
+    data: {
+        list: WeatherDataList[],
+        city: weatherDataCity,
+    } | null
 }
 
-export function WeatherInfo({ data }: Props) {
-    const temp = data?.main?.temp
-    const temp_min = data?.main?.temp_min
-    const temp_max = data?.main?.temp_max
+export function WeatherInfo({ data }: Props) {   
+    const city = data?.city
 
-    const icon = data?.weather[0]?.icon
-    const description = data?.weather[0]?.description
+    const temp = data?.list[0].main.temp
+    const temp_min = data?.list[0].main.temp_min
+    const temp_max = data?.list[0].main.temp_max
 
-    function capitalizeWords(description: string) {
-        return description?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const icon = data?.list[0].weather[0].icon
+    const description = data?.list[0].weather[0].description
+
+    let formattedDate = ''
+
+    if (data?.list[0].dt) {
+        const date = new Date(data?.list[0].dt * 1000)
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+
+        formattedDate = `${day}/${month}/${year}`;
+    }
+
+    function capitalizeWords(description: string | undefined) {
+        let result = ''
+
+        if (description) {
+            result = description?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+        }
+        
+        return result
     }
 
     return (
         <View style={styles.container}>
-            <Image
-                style={styles.icon}
-                source={{ uri: `https://openweathermap.org/img/wn/${icon}@4x.png` }}
-            />
+            <View style={styles.header}>
+                <Ionicons name="location-outline" style={styles.headerIcon} />
 
+                <Text style={styles.headerText}>
+                    {city?.name}
+                </Text>
+            </View>
+            
             <View style={styles.tempTextContainer}>
-                <Text style={styles.tempText}>{capitalizeWords(description)}</Text>
+                <Image
+                    style={styles.icon}
+                    source={{ uri: `https://openweathermap.org/img/wn/${icon}@4x.png` }}
+                />
+                
+                <Text style={[styles.tempTextMedium, styles.fontItalic]}>{capitalizeWords(description)}</Text>
+
+                {
+                    formattedDate &&
+                    <Text style={styles.tempTextDate}>{ formattedDate }</Text>       
+                }
             </View>
 
-            <View style={styles.tempContainer}>
-                <Text style={[styles.tempText, styles.tempTitle]}>
-                    { Math.trunc(temp) }ºC
-                </Text>
-
-                <View style={styles.tempTextContainer}>
-                    <Text style={styles.labelText}>
-                        Máxima.: <Text style={styles.tempText}>{ Math.ceil(temp_max) }ºC</Text>
+            <View style={styles.tempTextMediumContainer}>
+                {
+                    temp && 
+                    <Text style={styles.tempTextLarge}>
+                        { Math.trunc(temp) }ºC
                     </Text>
-                    <Text style={styles.labelText}>
-                        Mínima: <Text style={styles.tempText}>{ Math.floor(temp_min) }ºC</Text>
+                }
+                
+                {
+                    temp_max &&
+                    <Text style={styles.tempTextSmall}>
+                        Máxima.: <Text style={styles.tempTextMedium}>{ Math.ceil(temp_max) }ºC</Text>
                     </Text>
-
-                </View>
+                }
+                {
+                    temp_min &&
+                    <Text style={styles.tempTextSmall}>
+                        Mínima: <Text style={styles.tempTextMedium}>{ Math.floor(temp_min) }ºC</Text>
+                    </Text>                
+                }
             </View>
         </View>
     )
@@ -51,33 +94,59 @@ const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 32,
+        padding: 24,
     },
-    tempContainer: {
+
+    header: {
+        flexDirection: 'row',
         justifyContent: 'center',
-        alignItems: 'center'
+        gap: 8,
     },
-    tempTitle: {
-        fontSize: 64,
+    headerIcon: {
+        fontSize: 24,
+        color: '#FFF'
+    },
+    headerText: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#FFF',
+        paddingRight: 8,
+    },
+
+    tempTextMediumContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     tempTextContainer: {
         alignItems: 'center',
         padding: 10,
     },
-    labelText: {
-        fontSize: 14,
+    tempTextLarge: {
+        fontSize: 72,
+        fontWeight: 'bold',
         color: '#FFFFFF',
     },
-    tempText: {
-        fontSize: 16,
+    tempTextMedium: {
+        fontSize: 14,
         fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+    tempTextSmall: {
+        fontSize: 12,
         color: '#FFFFFF',
     },
 
     icon: {
-        width: 120,
-        height: 120,
+        width: 100,
+        height: 100,
     },
+    fontItalic: {
+        fontStyle: 'italic'
+    },
+    tempTextDate: {
+        fontSize: 20,
+        color: '#FFFFFF',
+    }
 })
 
 export default WeatherInfo

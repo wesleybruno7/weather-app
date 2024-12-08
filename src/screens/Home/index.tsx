@@ -10,70 +10,35 @@ import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplet
 import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view'
 
 import { NavigationProps } from '../../types'
-
-import WeatherInfo from '../../components/WeatherInfo'
+import { weatherDataCity, WeatherDataList } from '../../types/openWeatherMap'
 
 import { MyFavorites, useFavorites } from '../../hooks/useFavorites'
 import { WeatherCard } from '../../components/WeatherCard'
+import WeatherInfo from '../../components/WeatherInfo'
 
 
 type Props = NavigationProps<'Home'>
 
-interface NextDaysData {
-    dt_txt: string
-    temp: number
-    temp_min: number
-    temp_max: number
-    weather: {
-        description: string
-        icon: string
-    }[]
-}
-
 export function Home({ navigation }: Props) {         
-    const [currentCity, setCurrentCity] = useState<string>('')
-    const [weatherForecastData, setWeatherForecastData] = useState<MyFavorites['data']|null>(null)
-
+    
     const { favorites, addFavorite, removeFavorite, cityIsInFavorites } = useFavorites()
 
-    const [nextDaysData, setNextDaysData] = useState<NextDaysData[]>([])
+    const [weatherData, setWeatherData] = useState<MyFavorites | null>(null)
+    const [isFavorite, setIsFavorite] = useState<boolean>(false)
 
     function toggleFavorite() {
-        const city: MyFavorites = {
-            name: currentCity,
-            data: weatherForecastData,
-        }
-
-        if (cityIsInFavorites(currentCity)) {
-            removeFavorite(currentCity)
-        } else {
-            addFavorite(city)
+        if (weatherData) {
+            const city: string = weatherData.city.name
+    
+            if (cityIsInFavorites(city)) {
+                removeFavorite(city)
+            } else {
+                addFavorite(weatherData)
+            }
         }
     }
 
     function handleGetWeatherForecast(str: string) {
-        const baseUrl = WEATHER_API_BASE_URL
-        const apiKey = WEATHER_API_KEY // key that guarantees your access to the api
-        const endpoint = 'weather'
-
-        const lang = 'pt_br' // to set Portuguese as language in return
-        const units = 'metric' // to define Celsius as a metric in the return
-        const q = str // selected city on input
-
-        const endpointUrl = `${baseUrl}/${endpoint}?appid=${apiKey}&q=${q}&lang=${lang}&units=${units}` 
-
-        fetch(endpointUrl)
-            .then(response => response.json())
-            .then(data => {
-                console.log(data)
-
-                setWeatherForecastData(data) // saves all returned data for future use
-                setCurrentCity(data.name)
-            })
-            .catch(error => console.error("Unable to obtain the weather via request:", error))
-    }
-
-    function handleGetWeatherForecastNextFiveDays(str: string) {
         const baseUrl = WEATHER_API_BASE_URL
         const apiKey = WEATHER_API_KEY // key that guarantees your access to the api
         const endpoint = 'forecast'
@@ -87,13 +52,21 @@ export function Home({ navigation }: Props) {
         fetch(endpointUrl)
             .then(response => response.json())
             .then(data => {
-                const filteredData = data.list?.filter((item: any, index: number, array: any[]) => {
-                    const currentDate = new Date(item.dt_txt).getDate()
-                    const previousDate = index > 0 ? new Date(array[index - 1].dt_txt).getDate() : null
-                    return currentDate !== previousDate
-                }).slice(0, 5) // get only 5 next days
+                // Filtering the data to remove day and night duplicates
+                const filteredList = data.list.filter((item: WeatherDataList, index: number, self: WeatherDataList[]) => 
+                    index === self.findIndex((t) => (
+                        t.dt_txt.split(' ')[0] === item.dt_txt.split(' ')[0]
+                    ))
+                );
 
-                setNextDaysData(filteredData)
+                // Selecting the first 6 items from the filtered list
+                const selectedWeatherList: WeatherDataList[] = filteredList.slice(0, 6);
+                const selectedCity: weatherDataCity = data.city;
+
+                setWeatherData({
+                    list: selectedWeatherList, 
+                    city: selectedCity
+                });
             })
             .catch(error => console.error("Unable to obtain the weather via request:", error))
     }
@@ -101,12 +74,11 @@ export function Home({ navigation }: Props) {
     useEffect(() => {
         const initialLocation = 'São José do Rio Preto'
         handleGetWeatherForecast(initialLocation)
-        handleGetWeatherForecastNextFiveDays(initialLocation)
     }, [])
 
-    useEffect(() => {
-        console.log(favorites)
-    }, [favorites])
+    // useEffect(() => {
+    //     console.log(favorites)
+    // }, [favorites])
 
     return (
         <SafeAreaView style={styles.container}>     
@@ -137,10 +109,9 @@ export function Home({ navigation }: Props) {
                         onPress={(data, details = null) => {
                             if (details) {
                                 handleGetWeatherForecast(data.description)
-                                handleGetWeatherForecastNextFiveDays(data.description)
                             }
                         }}
-                        currentLocationLabel={currentCity}
+                        currentLocationLabel={weatherData?.city?.name || ''}
                         query={{
                             key: GOOGLE_API_KEY,
                             language: 'pt',
@@ -183,10 +154,10 @@ export function Home({ navigation }: Props) {
 
                                 <TouchableOpacity onPress={toggleFavorite} style={{  margin: 16, justifyContent: 'center', alignItems: 'center', gap: 8, flexDirection: 'row' }}>
                                     <Ionicons 
-                                        name={cityIsInFavorites(currentCity) ? "heart" : "heart-outline"} 
+                                        name={cityIsInFavorites(weatherData?.city.name) ? "heart" : "heart-outline"} 
                                         style={[
                                             styles.menuTextIcon,
-                                            cityIsInFavorites(currentCity) && { color: '#F00'}
+                                            cityIsInFavorites(weatherData?.city.name)  && { color: '#F00'}
                                         ]} 
                                     />
 
@@ -197,24 +168,14 @@ export function Home({ navigation }: Props) {
                                 </TouchableOpacity>
                             </View>
                         </View>
-
-                        <View style={styles.weatherInfoWrapper}>
-                            <View style={styles.weatherInfoHeader}>
-                                <Ionicons name="location-outline" style={styles.weatherInfoHeaderIcon} />
-
-                                <Text style={styles.weatherInfoHeaderText}>
-                                    {currentCity}
-                                </Text>
-                            </View>
-
-                            <WeatherInfo 
-                                data={weatherForecastData}
-                            />               
-                        </View>
+                        
+                        <WeatherInfo 
+                            data={weatherData}
+                        />
 
                         <View style={styles.nextFiveDaysContainer}>
                             <FlatList
-                                data={nextDaysData}
+                                data={weatherData?.list.slice(1,6) || []}
                                 horizontal
                                 keyExtractor={(item, index) => index.toString()}
                                 renderItem={({ item }) => (
@@ -222,9 +183,9 @@ export function Home({ navigation }: Props) {
                                 )}
                                 showsHorizontalScrollIndicator={false}
                                 contentContainerStyle={{
-                                    paddingHorizontal: 0,
+                                    paddingLeft: 0, paddingRight: 32,
                                 }}
-                                style={{ paddingHorizontal: 32 }}
+                                style={{ paddingHorizontal: 24, paddingVertical: 16 }}
                             />
                         </View>
                     </View>
@@ -269,35 +230,8 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 10,
     },  
-    weatherInfoWrapper: {
-        flex: 1,
-        padding: 32,
-    },
-    weatherInfoHeader: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 8,
-    },
-    weatherInfoHeaderIcon: {
-        fontSize: 24,
-        color: '#FFF'
-    },
-    weatherInfoHeaderText: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#FFF',
-        paddingRight: 8,
-    },
 
-    card: {
-        backgroundColor: 'lightgreen',
-        width: 150,
-        height: 150,
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
     nextFiveDaysContainer: {
-        paddingVertical: 32,
+        paddingVertical: 8,
     },
 })
