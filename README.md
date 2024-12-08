@@ -35,3 +35,10 @@ Após iniciar o projeto, você pode acessar o aplicativo no seu dispositivo móv
 - React Native
 - Expo
 - OpenWeatherMap API
+
+# Imagens do App
+
+![image](https://github.com/user-attachments/assets/481beddd-6efe-4cb2-b5d6-b19a3a0438fd)
+![image](https://github.com/user-attachments/assets/bf1aa7e1-6948-4d77-a62f-8d686a4e8187)
+![image](https://github.com/user-attachments/assets/e1d2b2cb-d615-4e53-bd4a-fa6e50d932b8)
+![image](https://github.com/user-attachments/assets/caeed4e2-1495-45d0-8a59-192ee26db892)
