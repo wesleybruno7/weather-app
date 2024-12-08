@@ -38,5 +38,4 @@ Após iniciar o projeto, você pode acessar o aplicativo no seu dispositivo móv
 
 # Imagens do App
 
-![image](https://github.com/user-attachments/assets/70fedc38-4fd6-4ff2-848f-226b65616100)
-
+![image](https://github.com/user-attachments/assets/39b80dce-8b1d-4034-b92f-bda141e86c80)
