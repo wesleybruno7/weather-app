@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { FlatList, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { GOOGLE_API_KEY, WEATHER_API_KEY, WEATHER_API_BASE_URL } from '@env'
 
@@ -89,9 +89,9 @@ export function Home({ navigation }: Props) {
 
             <View style={{
                 zIndex: 1,
-                height: 80,
+                height: Platform.OS === 'ios' ? 80 : 100,
                 width: '100%',
-                backgroundColor: '#444DF4',
+                // backgroundColor: '#444DF4',
             }}>
                 <View style={{
                     position: 'absolute', 
@@ -99,7 +99,7 @@ export function Home({ navigation }: Props) {
                     zIndex: 1, 
                     width: '100%', 
                     flex: 1,
-                    marginTop: 20,
+                    marginTop: Platform.OS === 'ios' ? 20 : 40,
                     // marginTop: 72,
                     paddingHorizontal: 16,
                 }}>
@@ -134,7 +134,7 @@ export function Home({ navigation }: Props) {
                 renderItem={() => (
                     <View style={{ flexGrow: 1, height: '100%'}}>
                         <View
-                            style={{ flex: 1 }}
+                            style={{ height: 70 }}
                         >
                             <View style={styles.menuContainer}>
                                 <TouchableOpacity 
@@ -232,6 +232,6 @@ const styles = StyleSheet.create({
     },  
 
     nextFiveDaysContainer: {
-        paddingVertical: 8,
+        paddingVertical: 16,
     },
 })

@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, StyleSheet, Image } from 'react-native'
+import { View, Text, StyleSheet, Image, Platform } from 'react-native'
 import { WeatherDataList } from '../types/openWeatherMap'
 
 interface Props {
@@ -73,7 +73,6 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: '#FFFFFF66',
         padding: 16,
-        marginVertical: 10,
         borderRadius: 10,
         width: 190,
         marginRight: 16,
