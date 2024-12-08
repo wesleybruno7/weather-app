@@ -4,17 +4,18 @@ import { FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from
 import { GOOGLE_API_KEY, WEATHER_API_KEY, WEATHER_API_BASE_URL } from '@env'
 
 import 'react-native-get-random-values'
+import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
+import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view'
 
 import { NavigationProps } from '../../types'
 
 import WeatherInfo from '../../components/WeatherInfo'
-import WeatherGradient from '../../components/WeatherGradient'
 
 import { MyFavorites, useFavorites } from '../../hooks/useFavorites'
-import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view'
 import { WeatherCard } from '../../components/WeatherCard'
+
 
 type Props = NavigationProps<'Home'>
 
@@ -29,9 +30,7 @@ interface NextDaysData {
     }[]
 }
 
-export function Home({ navigation }: Props) {      
-    const [isDaytime, setIsDaytime] = useState<boolean>(true)
-    
+export function Home({ navigation }: Props) {         
     const [currentCity, setCurrentCity] = useState<string>('')
     const [weatherForecastData, setWeatherForecastData] = useState<MyFavorites['data']|null>(null)
 
@@ -52,17 +51,6 @@ export function Home({ navigation }: Props) {
         }
     }
 
-    interface MainData {
-        feels_like: number,
-        grnd_level: number,
-        humidity: number,
-        pressure: number,
-        sea_level: number,
-        temp: number,
-        temp_max: number,
-        temp_min: number,
-    }
-
     function handleGetWeatherForecast(str: string) {
         const baseUrl = WEATHER_API_BASE_URL
         const apiKey = WEATHER_API_KEY // key that guarantees your access to the api
@@ -81,14 +69,6 @@ export function Home({ navigation }: Props) {
 
                 setWeatherForecastData(data) // saves all returned data for future use
                 setCurrentCity(data.name)
-
-                if (data.sys && data.dt && data.timezone) {
-                    const localDateTime = new Date((data.dt + data.timezone) * 1000)
-                    const localHour = localDateTime.getUTCHours()
-                    const localIsDaytime = localHour >= 6 && localHour < 18
-
-                    setIsDaytime(localIsDaytime)
-                }
             })
             .catch(error => console.error("Unable to obtain the weather via request:", error))
     }
@@ -114,26 +94,6 @@ export function Home({ navigation }: Props) {
                 }).slice(0, 5) // get only 5 next days
 
                 setNextDaysData(filteredData)
-
-                // const mappedData = filteredData?.map((item: any) => {
-                //     const date = item.dt_txt
-                //     const temp = item.main.temp
-                //     const temp_min = item.main.temp_min
-                //     const temp_max = item.main.temp_max
-
-                //     return {
-                //         dt_txt: date,
-                //         temp: temp,
-                //         temp_min: temp_min,
-                //         temp_max: temp_max,
-                //         weather: item.weather.map((w: any) => ({
-                //             description: w.description,
-                //             icon: w.icon
-                //         }))
-                //     }
-                // })
-
-                // setNextDaysData(mappedData)
             })
             .catch(error => console.error("Unable to obtain the weather via request:", error))
     }
@@ -150,7 +110,10 @@ export function Home({ navigation }: Props) {
 
     return (
         <SafeAreaView style={styles.container}>     
-            <WeatherGradient weatherForecastData={weatherForecastData} isDaytime={isDaytime} />
+            <LinearGradient 
+                colors={['#444DF4', '#B0C4DE']}
+                style={{ ...StyleSheet.absoluteFillObject }}
+            />
 
             <View style={{
                 zIndex: 1,
@@ -245,8 +208,7 @@ export function Home({ navigation }: Props) {
                             </View>
 
                             <WeatherInfo 
-                                weatherForecastData={weatherForecastData}
-                                isDaytime={isDaytime}
+                                data={weatherForecastData}
                             />               
                         </View>
 
@@ -256,7 +218,7 @@ export function Home({ navigation }: Props) {
                                 horizontal
                                 keyExtractor={(item, index) => index.toString()}
                                 renderItem={({ item }) => (
-                                    <WeatherCard weatherData={item} />
+                                    <WeatherCard data={item} />
                                 )}
                                 showsHorizontalScrollIndicator={false}
                                 contentContainerStyle={{

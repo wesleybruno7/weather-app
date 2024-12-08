@@ -2,15 +2,15 @@ import React from 'react'
 import { View, Text, StyleSheet, Image } from 'react-native'
 
 interface Props {
-  weatherData: any
+  data: any
 }
 
-export function WeatherCard({ weatherData }: Props) {
+export function WeatherCard({ data }: Props) {
 
-  console.log('weatherData =>', weatherData)
+  console.log('data =>', data)
 
-    const { dt_txt, weather } = weatherData
-    const { temp, temp_min, temp_max } = weatherData.main
+    const { dt_txt, weather } = data
+    const { temp, temp_min, temp_max } = data.main
     const { description, icon } = weather[0]
 
     function capitalizeWords(description: string) {

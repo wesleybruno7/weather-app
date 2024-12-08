@@ -1,20 +1,20 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { View, Text, StyleSheet, Image } from 'react-native'
 
-interface WeatherProps {
-    weatherForecastData: any
-    isDaytime: boolean
+interface Props {
+    data: any
 }
 
-export function WeatherInfo({ weatherForecastData, isDaytime }: WeatherProps) {
-    const { main } = weatherForecastData
-    const { temp, temp_min, temp_max } = main
+export function WeatherInfo({ data }: Props) {
+    const temp = data?.main?.temp
+    const temp_min = data?.main?.temp_min
+    const temp_max = data?.main?.temp_max
 
-    const { weather } = weatherForecastData
-    const { icon, description } = weather[0]
+    const icon = data?.weather[0]?.icon
+    const description = data?.weather[0]?.description
 
     function capitalizeWords(description: string) {
-        return description.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        return description?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     }
 
     return (
