@@ -35,6 +35,7 @@ Após iniciar o projeto, você pode acessar o aplicativo no seu dispositivo móv
 - React Native
 - Expo
 - OpenWeatherMap API
+- GooglePlacesAutocomplete
 
 # Imagens do App
 
