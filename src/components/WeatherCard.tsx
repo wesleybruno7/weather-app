@@ -41,7 +41,7 @@ export function WeatherCard({ data }: Props) {
 
             <Text style={styles.textMedium}>{formattedDate}</Text>
 
-            <View style={{ flexDirection: 'row', columnGap: 16, flexWrap: 'wrap' }}>
+            <View style={styles.weatherContainer}>
                 <Text style={styles.textSmallBold}>
                     <Text style={styles.textSmall}>Min: </Text>{Math.floor(temp_min)}°C
                 </Text>
@@ -77,9 +77,15 @@ const styles = StyleSheet.create({
         width: 170,
         marginRight: 16,
     },
+    weatherContainer: {
+        flexDirection: 'row', 
+        columnGap: 16, 
+        flexWrap: 'wrap',
+    },
     textLarge: {
         fontSize: 18,
         fontWeight: 'bold',
+        marginBottom: 8
     },
     textMedium: {
         fontSize: 14,

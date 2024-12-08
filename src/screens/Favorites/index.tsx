@@ -29,10 +29,7 @@ export function Favorites({ navigation }: Props) {
 
   return (
     <>
-      <View style={{
-        backgroundColor: '#444DF4',
-        height: 50,
-      }} />
+      <View style={styles.searchBackgroundContainer} />
 
       <SafeAreaView style={styles.container}>
         <View style={styles.searchContainer}>
@@ -75,6 +72,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF'
+  },
+  searchBackgroundContainer: {
+    backgroundColor: '#444DF4',
+    height: 50,
   },
   searchContainer: {
     flexDirection: 'row',

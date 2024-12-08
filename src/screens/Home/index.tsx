@@ -17,12 +17,11 @@ import { WeatherCard } from '../../components/WeatherCard'
 import WeatherInfo from '../../components/WeatherInfo'
 import { useFocusEffect } from '@react-navigation/native'
 
-
 type Props = NavigationProps<'Home'>
 
 export function Home({ navigation, route }: Props) {     
         
-    const { favorites, addFavorite, removeFavorite, cityIsInFavorites, reloadFavorites } = useFavorites()
+    const { addFavorite, removeFavorite, cityIsInFavorites, reloadFavorites } = useFavorites()
 
     const [weatherData, setWeatherData] = useState<MyFavorites | null>(null)
 
@@ -79,8 +78,7 @@ export function Home({ navigation, route }: Props) {
 
     useFocusEffect(
         useCallback(() => {
-            // Update favorites when screen gains focus
-            reloadFavorites()
+            reloadFavorites() // Update favorites when screen gains focus
 
             handleGetWeatherForecast(city)
         }, [])
@@ -90,24 +88,11 @@ export function Home({ navigation, route }: Props) {
         <SafeAreaView style={styles.container}>     
             <LinearGradient 
                 colors={['#444DF4', '#B0C4DE']}
-                style={{ ...StyleSheet.absoluteFillObject }}
+                style={styles.gradient}
             />
 
-            <View style={{
-                zIndex: 1,
-                height: Platform.OS === 'ios' ? 80 : 100,
-                width: '100%',
-                // backgroundColor: '#444DF4',
-            }}>
-                <View style={{
-                    position: 'absolute', 
-                    alignSelf: 'center', 
-                    zIndex: 1, 
-                    width: '100%', 
-                    flex: 1,
-                    marginTop: Platform.OS === 'ios' ? 20 : 40,
-                    paddingHorizontal: 16,
-                }}>
+            <View style={styles.serachWrapper}>
+                <View style={styles.searchContainer}>
                     <GooglePlacesAutocomplete
                         placeholder="Digite o nome de uma cidade"
                         fetchDetails={true}
@@ -157,7 +142,7 @@ export function Home({ navigation, route }: Props) {
                                     </View>
                                 </TouchableOpacity>
 
-                                <TouchableOpacity onPress={toggleFavorite} style={{  margin: 16, justifyContent: 'center', alignItems: 'center', gap: 8, flexDirection: 'row' }}>
+                                <TouchableOpacity onPress={toggleFavorite} style={styles.toggleFavoriteButton}>
                                     <Ionicons 
                                         name={cityIsInFavorites(weatherData?.city.name) ? "heart" : "heart-outline"} 
                                         style={[
@@ -196,8 +181,7 @@ export function Home({ navigation, route }: Props) {
                     </View>
                 )}
             />
-        </SafeAreaView>
-        
+        </SafeAreaView>        
     )
 }
 
@@ -205,6 +189,24 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    gradient: {
+        ...StyleSheet.absoluteFillObject
+    },
+    serachWrapper: {
+        zIndex: 1,
+        height: Platform.OS === 'ios' ? 80 : 100,
+        width: '100%',
+    },
+    searchContainer: {
+        position: 'absolute', 
+        alignSelf: 'center', 
+        zIndex: 1, 
+        width: '100%', 
+        flex: 1,
+        marginTop: Platform.OS === 'ios' ? 20 : 40,
+        paddingHorizontal: 16,
+    },
+    
     searchInputContainer: {
         flex: 1,
         zIndex: 1,
@@ -234,8 +236,14 @@ const styles = StyleSheet.create({
     menuTextButton: {
         color: '#FFF',
         fontSize: 10,
-    },  
-
+    }, 
+    toggleFavoriteButton: {
+        margin: 16, 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        gap: 8, 
+        flexDirection: 'row'
+    },
     nextFiveDaysContainer: {
         paddingVertical: 16,
     },

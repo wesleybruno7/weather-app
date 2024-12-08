@@ -57,13 +57,15 @@ export function FavoriteCard({ city, onDelete }: Props) {
         >
           <Animated.View style={[styles.card, styles.shadow, animatedStyle]}>
             <Text style={styles.cardTitle}>{city.name}</Text>
+
             <Text style={styles.cardText}>
               Latitude: 
-              <Text style={{ fontWeight: 'bold' }}>{city.coord.lat}</Text>
+              <Text style={styles.cardTextBold}>{city.coord.lat}</Text>
             </Text>
+            
             <Text style={styles.cardText}>
               Longitude: 
-              <Text style={{ fontWeight: 'bold' }}>{city.coord.lon}</Text>
+              <Text style={styles.cardTextBold}>{city.coord.lon}</Text>
             </Text>
           </Animated.View>
         </TouchableOpacity>
@@ -109,10 +111,14 @@ const styles = StyleSheet.create({
   cardText: {
     fontSize: 12,
   },
+  cardTextBold: {
+    fontSize: 12,
+    fontWeight: 'bold'
+  },
   shadow: {
     shadowColor: '#CCC',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-  }
+  },
 });
